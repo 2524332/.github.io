@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>和歌の修辞法マスター</title>
+  
+  <!-- Tailwind CSS (スタイリング用) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            'fade-in': 'fadeIn 0.4s ease-out',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0', transform: 'translateY(10px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React & ReactDOM (動的UI用) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  
+  <!-- Babel (ブラウザでのJSXコンパイル用) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* 日本語フォントを綺麗に見せるための基本設定 */
+    body {
+      font-family: "Yu Mincho", "MS Mincho", "Hiragino Mincho ProN", serif;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    // アイコンコンポーネントの定義 (lucide-reactの代用)
+    const BookOpen = ({ className }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+    );
+    const CheckCircle = ({ className }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    );
+    const XCircle = ({ className }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    );
+    const Trophy = ({ className }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+    );
+    const ChevronRight = ({ className }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="9 18 15 12 9 6"/></svg>
+    );
+    const RotateCcw = ({ className }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+    );
+
+    // 全30問のクイズデータ
+    const questions = [
+      // --- 枕詞 (1〜6問) ---
+      {
+        category: "枕詞（まくらことば）",
+        question: "「あしひきの」という枕詞は特定の言葉を導くために使われます。「あしひきの」が導く言葉として正しいものはどれですか？",
+        options: ["川", "山", "海", "空"],
+        correctIndex: 1,
+        explanation: "「あしひきの」は「山」や、山に関連する言葉（峰、尾など）を導く枕詞です。"
+      },
+      {
+        category: "枕詞（まくらことば）",
+        question: "和歌で使われる「枕詞」は、原則として何音で構成されていますか？",
+        options: ["3音", "5音", "7音", "文字数の制限はない"],
+        correctIndex: 1,
+        explanation: "枕詞は原則として「5音」で構成され、特定の言葉を引き出すために使われます。"
+      },
+      {
+        category: "枕詞（まくらことば）",
+        question: "「ひさかたの」という枕詞が導く言葉として、間違っているものはどれですか？",
+        options: ["光", "月", "雲", "海"],
+        correctIndex: 3,
+        explanation: "「ひさかたの」は、天や空に関連する言葉（光、月、雲、空など）を導きます。「海」には使いません。"
+      },
+      {
+        category: "枕詞（まくらことば）",
+        question: "「たらちねの」という枕詞が導く言葉はどれですか？",
+        options: ["父", "母", "夫", "妻"],
+        correctIndex: 1,
+        explanation: "「たらちねの」は「母」や「親」を導く枕詞です。「垂乳根の」と書き、母親を連想させます。"
+      },
+      {
+        category: "枕詞（まくらことば）",
+        question: "古文を現代語訳する際、枕詞はどのように扱うのが一般的ですか？",
+        options: ["必ず直訳する", "原則として訳さない", "意訳して補う", "作者の心情として訳す"],
+        correctIndex: 1,
+        explanation: "枕詞は調子を整えたり言葉を修飾したりする機能的な言葉であるため、現代語訳する際は「原則として訳さない」のが一般的です。"
+      },
+      {
+        category: "枕詞（まくらことば）",
+        question: "「ちはやぶる」という枕詞が導く言葉として正しいものはどれですか？",
+        options: ["神", "人", "波", "風"],
+        correctIndex: 0,
+        explanation: "「ちはやぶる（千早振る）」は、勢いが激しい様子を表し、主に「神」や「宇治」などを導く枕詞です。百人一首の「ちはやぶる神代も聞かず…」が有名です。"
+      },
+      // --- 序詞 (7〜11問) ---
+      {
+        category: "序詞（じょことば）",
+        question: "序詞と枕詞の決定的な違いについて、正しい説明はどれですか？",
+        options: ["序詞は5音だが、枕詞は7音である", "序詞は特定の言葉しか導かないが、枕詞は自由である", "枕詞は5音が基本で決まった言葉を導くが、序詞は文字数に制限がなく自由作れる", "どちらも同じもので、時代によって呼び方が違うだけ"],
+        correctIndex: 2,
+        explanation: "枕詞は「5音」で「固定の言葉」を導きますが、序詞は「文字数に制限がなく（長く）」、作者が「自由に創作できる」という大きな違いがあります。"
+      },
+      {
+        category: "序詞（じょことば）",
+        question: "「足引の 山鳥の尾の しだり尾の 長々し夜を ひとりかも寝む」で、序詞が導いている言葉はどれですか？",
+        options: ["山鳥", "しだり尾", "長々し", "ひとり"],
+        correctIndex: 2,
+        explanation: "「足引の山鳥の尾のしだり尾の」という長いフレーズ（序詞）が、垂れ下がった長い尾から連想される「長々し」という言葉を導き出しています。"
+      },
+      {
+        category: "序詞（じょことば）",
+        question: "序詞は、主にどのような修辞法とセットで使われることが多いですか？",
+        options: ["体言止めや倒置法", "掛詞や同音異義語", "擬人法", "本歌取り"],
+        correctIndex: 1,
+        explanation: "序詞は、音の響きを利用して下の句に繋げることが多いため、同音異義語を利用した「掛詞（かけことば）」とセットで使われることが非常に多いです。"
+      },
+      {
+        category: "序詞（じょことば）",
+        question: "「みちのくの しのぶもぢずり 誰ゆゑに 乱れそめにし 我ならなくに」の序詞はどこまでですか？",
+        options: ["みちのくの", "しのぶもぢずり", "誰ゆゑに", "乱れそめにし"],
+        correctIndex: 1,
+        explanation: "「みちのくの しのぶもぢずり（陸奥の国の、しのぶもじずりという乱れ模様の布）」までが序詞で、模様が乱れていることから「乱れ」という言葉を導いています。"
+      },
+      {
+        category: "序詞（じょことば）",
+        question: "「風吹けば 沖つ白波 たつた山 夜半にや君が ひとり越ゆらむ」で、「たつた山」の『たつ』を導くための序詞はどこまでですか？",
+        options: ["風吹けば", "沖つ白波", "夜半にや", "ひとり越ゆらむ"],
+        correctIndex: 1,
+        explanation: "「風吹けば沖つ白波（白波が立つ）」までが序詞で、波が「立つ」と同音の「たつ（竜田山）」を導いています。"
+      },
+      // --- 掛詞 (12〜18問) ---
+      {
+        category: "掛詞（かけことば）",
+        question: "掛詞（かけことば）とはどのような修辞法ですか？",
+        options: ["一つの言葉に二つ以上の意味を持たせる技法", "名詞で歌を終わらせる技法", "人間以外のものを人間に見立てる技法", "有名な古い歌を取り入れる技法"],
+        correctIndex: 0,
+        explanation: "同音異義語を利用して、一つの言葉（音）に二つ（またはそれ以上）の意味を持たせる技法を掛詞といいます。"
+      },
+      {
+        category: "掛詞（かけことば）",
+        question: "小野小町の歌「花の色は うつりにけりな いたづらに わが身世にふる ながめせしまに」の『ふる』に掛けられている二つの意味はどれですか？",
+        options: ["降る・古る", "経る・降る", "震える・降る", "触れる・経る"],
+        correctIndex: 1,
+        explanation: "時が経過する意味の「経る（へる・ふる）」と、雨が「降る」の二つの意味が掛けられています。"
+      },
+      {
+        category: "掛詞（かけことば）",
+        question: "同じく小野小町の歌の『ながめ』に掛けられている二つの意味はどれですか？",
+        options: ["長雨・眺め", "流れる・眺め", "長雨・嘆き", "長い目・眺め"],
+        correctIndex: 0,
+        explanation: "長く降る雨である「長雨（ながめ）」と、物思いにふけってぼんやり見る「眺め」が掛けられています。"
+      },
+      {
+        category: "掛詞（かけことば）",
+        question: "「秋の野に 人まつ虫の 声すなり…」の『まつ』に掛けられている意味はどれですか？",
+        options: ["松・末", "待つ・松虫", "待つ・松", "末・待つ"],
+        correctIndex: 1,
+        explanation: "人を「待つ」と、昆虫の「松虫（まつむし）」が掛けられています。"
+      },
+      {
+        category: "掛詞（かけことば）",
+        question: "「わびぬれば 今はたおなじ 難波なる みをつくしても 逢はむとぞ思ふ」の『みをつくし』の掛詞の組み合わせは？",
+        options: ["水つくし・身を尽くし", "身を尽くし・澪標", "身を隠し・澪標", "澪標・見落とし"],
+        correctIndex: 1,
+        explanation: "我が身を犠牲にする「身を尽くし」と、難波の海にあった水路の目印「澪標（みおつくし）」が掛けられています。"
+      },
+      {
+        category: "掛詞（かけことば）",
+        question: "「立ち別れ いなばの山の 峰に生ふる まつとし聞かば 今帰り来む」の『いなば』に掛けられている二つの意味はどれですか？",
+        options: ["稲葉・往なば", "因幡・往なば", "否ば・稲葉", "因幡・居なば"],
+        correctIndex: 1,
+        explanation: "地名の「因幡（いなばの国）」と、「往なば（もし私が去ってしまったら）」という二つの意味が掛けられています。"
+      },
+      {
+        category: "掛詞（かけことば）",
+        question: "同じく「立ち別れ いなばの山の…」の歌の『まつ』に掛けられている二つの意味はどれですか？",
+        options: ["待つ・松", "末・待つ", "松・祭", "待つ・末"],
+        correctIndex: 0,
+        explanation: "「（私を）待つ」という意味と、植物の「松」が掛けられています。"
+      },
+      // --- 縁語 (19〜24問) ---
+      {
+        category: "縁語（えんご）",
+        question: "縁語（えんご）とはどのような技法ですか？",
+        options: ["一つの言葉に複数の意味を持たせる技法", "特定の言葉を導き出す5音の言葉", "一首の中に、意味上関連のある言葉を散りばめる技法", "語順を逆にして強調する技法"],
+        correctIndex: 2,
+        explanation: "連想ゲームのように、一つの歌の中に意味的に関連のある言葉（縁のある言葉）を複数配置して、歌に重層的なイメージを持たせる技法です。"
+      },
+      {
+        category: "縁語（えんご）",
+        question: "「唐衣 着つつなれにし つましあれば はるばるきぬる 旅をしぞ思ふ」において、『衣（ころも）』の縁語に該当しないものはどれですか？",
+        options: ["着（き）", "なれ", "つま", "旅"],
+        correctIndex: 3,
+        explanation: "「着」「なれ（馴れ／萎れ）」「つま（妻／褄）」「はる（遥か／張る）」「き（来／着）」が衣の縁語です。「旅」は縁語ではありません。"
+      },
+      {
+        category: "縁語（えんご）",
+        question: "「糸による 物ならなくに わかれ路の 心細くも 思ほゆるかな」に含まれる縁語の組み合わせとして正しいものは？",
+        options: ["糸・よる・細く", "糸・わかれ・心", "物・路・思ほゆる", "よる・わかれ・細く"],
+        correctIndex: 0,
+        explanation: "「糸」に関連する言葉として「よる（縒る）」「細く」が縁語として使われています。"
+      },
+      {
+        category: "縁語（えんご）",
+        question: "「難波江の 蘆のかりねの ひとよゆゑ みをつくしてや 恋ひわたるべき」で、『蘆（あし）』の縁語として使われている言葉の組み合わせはどれですか？",
+        options: ["難波江・恋", "ひとよ・恋", "かりね・ひとよ", "みをつくし・わたる"],
+        correctIndex: 2,
+        explanation: "植物の蘆（あし）の縁語として、「かりね（仮寝／刈り根）」や「ひとよ（一夜／一節）」が使われています。"
+      },
+      {
+        category: "縁語（えんご）",
+        question: "掛詞と縁語は、和歌の中で同時に使われることが多い。○か×か？",
+        options: ["○（よく一緒に使われる）", "×（絶対に一緒に使われない）", "×（時代が全く違う技法である）", "×（短歌では文字数が足りず併用できない）"],
+        correctIndex: 0,
+        explanation: "掛詞で別の意味を持たせつつ、その言葉に関連する縁語を散りばめるという高度なテクニックは、平安時代の和歌で頻繁に用いられました。"
+      },
+      {
+        category: "縁語（えんご）",
+        question: "「みかきもり 衛士のたく火の 夜はもえ 昼は消えつつ 物をこそ思へ」において、「もえ（燃え）」「消え」の縁語の基準となっている言葉はどれですか？",
+        options: ["みかき", "衛士", "火", "昼"],
+        correctIndex: 2,
+        explanation: "「火」に関連する言葉として、「もえ（燃え）」や「消え」が縁語として使われており、激しい恋心が燃えたり消え入りそうになったりする様子と重ねられています。"
+      },
+      // --- 体言止め・本歌取り (25〜30問) ---
+      {
+        category: "体言止め（たいげんどめ）",
+        question: "体言止めとはどのような修辞法ですか？",
+        options: ["動詞で歌を終わらせる技法", "形容詞で歌を終わらせる技法", "名詞（体言）で歌を終わらせる技法", "助詞で歌を終わらせる技法"],
+        correctIndex: 2,
+        explanation: "和歌の最後（結句）を「名詞（体言）」で言い切る形で終わらせる技法です。"
+      },
+      {
+        category: "体言止め（たいげんどめ）",
+        question: "体言止めが和歌にもたらす主な効果はどれですか？",
+        options: ["リズムを速くする", "余情（あじわい・余韻）を残す", "事実を客観的に伝える", "相手を強く非難する"],
+        correctIndex: 1,
+        explanation: "あえて名詞で終わらせることで、その後に続くはずの言葉を読者の想像に委ね、深い余韻（余情）を残す効果があります。"
+      },
+      {
+        category: "体言止め（たいげんどめ）",
+        question: "次の歌のうち、体言止めが使われているものはどれですか？",
+        options: ["花の色は うつりにけりな いたづらに", "見渡せば 花も紅葉も なかりけり 浦の苫屋の 秋の夕暮れ", "君待つと わが恋ひをれば わが宿の すだれ動かし 秋の風吹く", "ひさかたの 光のどけき 春の日に しづ心なく 花の散るらむ"],
+        correctIndex: 1,
+        explanation: "新古今和歌集の有名な歌で、最後が「秋の夕暮れ」という名詞（体言）で終わっており、深い寂寥感の余韻を残しています。"
+      },
+      {
+        category: "体言止め（たいげんどめ）",
+        question: "「むらさきの 匂へる妹を 憎くあらば 人妻ゆゑに われ恋ひめやも」という歌は体言止めが使われている。○か×か？",
+        options: ["○（使われている）", "×（使われていない）"],
+        correctIndex: 1,
+        explanation: "最後が「やも」という助詞（反語）で終わっているため、体言止めではありません。体言止めは必ず名詞（体言）で終わります。"
+      },
+      {
+        category: "本歌取り（ほんかどり）",
+        question: "本歌取り（ほんかどり）とはどのような技法ですか？",
+        options: ["天皇が詠んだ歌を暗唱すること", "有名な古い歌の語句を取り入れて、新しい歌に重層的な深みを持たせる技法", "一つのテーマで何百首も歌を詠むこと", "和歌を歌う時の独特のメロディーのこと"],
+        correctIndex: 1,
+        explanation: "昔の有名な歌（本歌）の一部を意識的に自分の歌に取り入れ、本歌の情景と自分の歌の情景を重ね合わせて、歌に深い味わいを持たせる高度な技法です。"
+      },
+      {
+        category: "本歌取り（ほんかどり）",
+        question: "「本歌取り」の技法が極めて高度に発達し、多く用いられたことで知られる勅撰和歌集はどれですか？",
+        options: ["万葉集", "古今和歌集", "新古今和歌集", "金槐和歌集"],
+        correctIndex: 2,
+        explanation: "鎌倉時代初期に編纂された「新古今和歌集」において、本歌取りは余情妖艶・幽玄の美を表現するための重要な技法として多用されました。"
+      }
+    ];
+
+    function App() {
+      const [hasStarted, setHasStarted] = useState(false);
+      const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedOption, setSelectedOption] = useState(null);
+      const [isAnswered, setIsAnswered] = useState(false);
+      const [showResult, setShowResult] = useState(false);
+
+      const startGame = () => {
+        setHasStarted(true);
+        setCurrentQuestionIndex(0);
+        setScore(0);
+        setShowResult(false);
+        resetTurn();
+      };
+
+      const resetTurn = () => {
+        setSelectedOption(null);
+        setIsAnswered(false);
+      };
+
+      const handleOptionClick = (index) => {
+        if (isAnswered) return;
+        
+        setSelectedOption(index);
+        setIsAnswered(true);
+        
+        if (index === questions[currentQuestionIndex].correctIndex) {
+          setScore(score + 1);
+        }
+      };
+
+      const handleNext = () => {
+        if (currentQuestionIndex < questions.length - 1) {
+          setCurrentQuestionIndex(currentQuestionIndex + 1);
+          resetTurn();
+        } else {
+          setShowResult(true);
+        }
+      };
+
+      if (!hasStarted) {
+        return (
+          <div className="min-h-screen bg-stone-100 flex items-center justify-center p-4 font-serif text-stone-800">
+            <div className="max-w-xl w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-stone-200">
+              <div className="bg-emerald-800 p-8 text-center">
+                <BookOpen className="w-16 h-16 text-emerald-100 mx-auto mb-4" />
+                <h1 className="text-3xl font-bold text-white mb-2 tracking-widest">和歌の修辞法マスター</h1>
+                <p className="text-emerald-100 text-sm">〜高校古文 基礎力養成〜</p>
+              </div>
+              <div className="p-8 text-center space-y-6">
+                <p className="text-lg leading-relaxed">
+                  古文のテストでよく出る「枕詞」「掛詞」「序詞」など、和歌の修辞法を学ぶ全30問のクイズアプリです。
+                </p>
+                <div className="bg-stone-50 p-4 rounded-lg text-left text-sm text-stone-600 border border-stone-100">
+                  <ul className="list-disc list-inside space-y-2">
+                    <li>対象：高校1年生（古文基礎）</li>
+                    <li>出題形式：4択問題</li>
+                    <li>問題数：全30問（解説付き）</li>
+                  </ul>
+                </div>
+                <button 
+                  onClick={startGame}
+                  className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-4 rounded-xl transition-colors duration-300 text-lg shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                >
+                  学習をスタートする <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      if (showResult) {
+        let message = "";
+        if (score === 30) message = "完璧です！和歌の修辞法は完全にマスターしましたね！";
+        else if (score >= 20) message = "素晴らしい成績です！定期テストもバッチリですね。";
+        else if (score >= 10) message = "基礎が身についてきました。間違えたところを復習しましょう！";
+        else message = "和歌の世界はこれから！解説を読んで少しずつ覚えましょう。";
+
+        return (
+          <div className="min-h-screen bg-stone-100 flex items-center justify-center p-4 font-serif text-stone-800">
+            <div className="max-w-xl w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-stone-200 text-center">
+              <div className="bg-emerald-800 p-8 text-white">
+                <Trophy className="w-20 h-20 text-yellow-300 mx-auto mb-4" />
+                <h2 className="text-3xl font-bold mb-2">学習完了！</h2>
+              </div>
+              <div className="p-8 space-y-8">
+                <div>
+                  <p className="text-stone-500 mb-2">あなたの正答数</p>
+                  <div className="text-5xl font-bold text-emerald-700">
+                    {score} <span className="text-2xl text-stone-400">/ 30</span>
+                  </div>
+                </div>
+                <p className="text-lg text-stone-700 leading-relaxed bg-stone-50 p-4 rounded-lg">
+                  {message}
+                </p>
+                <button 
+                  onClick={startGame}
+                  className="bg-stone-800 hover:bg-stone-900 text-white font-bold py-3 px-8 rounded-xl transition-colors duration-300 inline-flex items-center gap-2"
+                >
+                  <RotateCcw className="w-5 h-5" /> もう一度挑戦する
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      const currentQuestion = questions[currentQuestionIndex];
+      const progressPercentage = ((currentQuestionIndex) / questions.length) * 100;
+
+      return (
+        <div className="min-h-screen bg-stone-100 flex items-center justify-center p-4 font-serif text-stone-800">
+          <div className="max-w-2xl w-full bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-200">
+            
+            {/* Header & Progress */}
+            <div className="bg-stone-50 px-6 py-4 border-b border-stone-200 flex justify-between items-center">
+              <span className="text-sm font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full">
+                {currentQuestion.category}
+              </span>
+              <span className="text-stone-500 font-medium">
+                第 {currentQuestionIndex + 1} 問 / 30
+              </span>
+            </div>
+            <div className="h-1.5 w-full bg-stone-200">
+              <div 
+                className="h-full bg-emerald-600 transition-all duration-300 ease-out"
+                style={{ width: `${progressPercentage}%` }}
+              ></div>
+            </div>
+
+            {/* Question Area */}
+            <div className="p-6 sm:p-8">
+              <h3 className="text-xl sm:text-2xl leading-relaxed font-medium text-stone-800 mb-8">
+                {currentQuestion.question}
+              </h3>
+
+              {/* Options */}
+              <div className="space-y-3">
+                {currentQuestion.options.map((option, index) => {
+                  let buttonStyle = "bg-white border-2 border-stone-200 hover:border-emerald-500 hover:bg-emerald-50 text-stone-700";
+                  
+                  if (isAnswered) {
+                    if (index === currentQuestion.correctIndex) {
+                      buttonStyle = "bg-emerald-100 border-2 border-emerald-500 text-emerald-800 font-bold";
+                    } else if (index === selectedOption) {
+                      buttonStyle = "bg-red-50 border-2 border-red-300 text-red-700 opacity-80";
+                    } else {
+                      buttonStyle = "bg-white border-2 border-stone-100 text-stone-400 opacity-50";
+                    }
+                  }
+
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleOptionClick(index)}
+                      disabled={isAnswered}
+                      className={`w-full text-left p-4 rounded-xl transition-all duration-200 flex items-center justify-between ${buttonStyle}`}
+                    >
+                      <span className="text-lg">{option}</span>
+                      {isAnswered && index === currentQuestion.correctIndex && <CheckCircle className="w-6 h-6 text-emerald-600" />}
+                      {isAnswered && index === selectedOption && index !== currentQuestion.correctIndex && <XCircle className="w-6 h-6 text-red-500" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Explanation Area */}
+              {isAnswered && (
+                <div className="mt-8 animate-fade-in">
+                  <div className={`p-4 rounded-t-xl flex items-center gap-2 font-bold text-lg ${
+                    selectedOption === currentQuestion.correctIndex ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {selectedOption === currentQuestion.correctIndex ? (
+                      <><CheckCircle className="w-6 h-6" /> 正解！</>
+                    ) : (
+                      <><XCircle className="w-6 h-6" /> 不正解...</>
+                    )}
+                  </div>
+                  <div className="bg-stone-50 border border-t-0 border-stone-200 p-5 rounded-b-xl">
+                    <p className="text-stone-700 leading-relaxed mb-6">
+                      <span className="font-bold text-stone-900 block mb-2">【解説】</span>
+                      {currentQuestion.explanation}
+                    </p>
+                    <button
+                      onClick={handleNext}
+                      className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                    >
+                      {currentQuestionIndex < questions.length - 1 ? "次の問題へ" : "結果を見る"} <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const rootElement = document.getElementById('root');
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(<App />);
+  </script>
+</body>
+</html>
